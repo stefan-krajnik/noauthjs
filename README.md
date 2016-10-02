@@ -1,4 +1,4 @@
-# noauth
+# noauthjs
 Simple NodeJS oAuth library
 
 # Features
@@ -11,7 +11,7 @@ Simple NodeJS oAuth library
 - body-parser (npm version 1.15.2+)
 
 # Instalation
-- Install using npm `npm install noauth --save`
+- Install using npm `npm install noauthjs --save`
 
 # Usage
 
@@ -21,7 +21,7 @@ See the example [config file](https://github.com/stefan-krajnik/noauth/blob/mast
 ## In app usage
 See the example [application file](https://github.com/stefan-krajnik/noauth/blob/master/example/app.js)  
 
-### const authServer = require('./../src/app');
+### const authServer = require('noauthjs');
 authServer is a singleton so don't try to create a new instance of it.  
 If you need to require it multiple files, just do so. Since it is a singleton you will always get the same object (instance).
 
