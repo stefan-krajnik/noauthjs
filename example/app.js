@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
-const authServer = require('./../src/app');
+const authServer = require('noauthjs');
 const serverConfig = require('./auth.config');
 
 authServer.initServer(serverConfig).then((result)=>{
