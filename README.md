@@ -16,10 +16,10 @@ Simple NodeJS oAuth library
 # Usage
 
 ## Create a config file
-See the example [config file](http://stefankrajnik.com)
+See the example [config file](https://github.com/stefan-krajnik/noauth/blob/master/example/auth.config.js)
 
 ## In app usage
-See the example [application file](http://stefankrajnik.com)  
+See the example [application file](https://github.com/stefan-krajnik/noauth/blob/master/example/app.js)  
 
 ### const authServer = require('./../src/app');
 authServer is a singleton so don't try to create a new instance of it.  
@@ -231,7 +231,7 @@ Creates (registers) a user with login information and scopes provided in **_user
 ### \*_m_\* removeUserScopes(uuid, scope_ids)
 **Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user
 
-### /*_m_/* deleteUserByUuid(uuid)
+### \*_m_\* deleteUserByUuid(uuid)
 **Returns a promise which resolves with a _bool_ values, _true_ if successfuly deleted, _false_ if user you tried to delete was not found in database**
 
 ## AuthUser public methods and variable
@@ -279,3 +279,8 @@ Validity of a access token is currently set to 3600 seconds.
 
 ### Refresh token
 If a client permits to refresh token, the token can be used to generate new _access_token_ and _refresh_token_
+
+
+# Contact
+- Found a bug? [Create an issue](https://github.com/stefan-krajnik/noauth/issues)
+- For anything elese, drop me an email stefan@stefankrajnik.com
