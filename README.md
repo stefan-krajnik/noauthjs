@@ -63,8 +63,8 @@ Creates a connection to mongodb using mongoose.
 
 ### \*_m_\* getProject(project_id)
 Creates an instance of AuthProject class, which provides methods and variables described below.
-The object is filled with data from database, which is an asynchronous process. To be sure the object has accurate data and is ready to use, use the `ready()` function which is described below in **project methods**.
-*Returns an object (instace of AuthProject)*
+The object is filled with data from database, which is an asynchronous process. To be sure the object has accurate data and is ready to use, use the `ready()` function which is described below in **project methods**.  
+**Returns an object (instace of AuthProject)**
 
 ### \*_v_\* accessTokenHandler
 accessTokenHandler is a _getter_ which returns a _callback_ function for **_express_** router, which takes `req, res` as parameters.
