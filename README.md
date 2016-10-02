@@ -16,10 +16,10 @@ Simple NodeJS oAuth library
 # Usage
 
 ## Create a config file
-See the example [config file](https://github.com/stefan-krajnik/noauth/blob/master/example/auth.config.js)
+See the example [config file](https://github.com/stefan-krajnik/noauthjs/blob/master/example/auth.config.js)
 
 ## In app usage
-See the example [application file](https://github.com/stefan-krajnik/noauth/blob/master/example/app.js)  
+See the example [application file](https://github.com/stefan-krajnik/noauthjs/blob/master/example/app.js)  
 
 ### const authServer = require('noauthjs');
 authServer is a singleton so don't try to create a new instance of it.  
@@ -282,5 +282,5 @@ If a client permits to refresh token, the token can be used to generate new _acc
 
 
 # Contact
-- Found a bug? [Create an issue](https://github.com/stefan-krajnik/noauth/issues)
+- Found a bug? [Create an issue](https://github.com/stefan-krajnik/noauthjs/issues)
 - For anything elese, drop me an email stefan@stefankrajnik.com
