@@ -7,7 +7,7 @@ Simple NodeJS oAuth library
 - Scope based authentiaction
 
 # Requirements
-- Express (npm version (npm version 4.14.0)
+- Express (npm version (npm version 4.14.0+)
 - body-parser (npm version 1.15.2+)
 
 # Instalation
@@ -28,7 +28,7 @@ If you need to require it multiple files, just do so. Since it is a singleton yo
 
 ####Example
 ```javascript
-const authServer = require('./../src/app');
+const authServer = require('noauthjs');
 const serverConfig = require('./auth.config');
 
 authServer.initServer(serverConfig).then((result)=>{
