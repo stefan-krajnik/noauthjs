@@ -1,0 +1,19 @@
+{
+  "name": "noauth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Stefan Krajnik",
+    "email": "stefan@stefankrajnik.com",
+    "url": "http://stefankrajnik.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "mongoose": "^4.6.0"
+  }
+}
