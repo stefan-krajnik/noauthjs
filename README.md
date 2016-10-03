@@ -2,8 +2,8 @@
 Simple NodeJS oAuth library
 
 # Features
-- Client credentails authentication
-- User credentails authentication
+- Client credentials authentication
+- User credentials authentication
 - Scope based authentiaction
 
 # Requirements
@@ -241,6 +241,20 @@ Creates (registers) a user with login information and scopes provided in **_user
 ### \*_v_\* password
 ### \*_v_\* project
 ### \*_v_\* scopes
+
+### \*_m_\* changeLogin(newLogin)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+
+### \*_m_\* changeUserPassword(uuid, newPassword)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+
+### \*_m_\* addUserScopes(uuid, scope_ids)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+
+### \*_m_\* removeUserScopes(uuid, scope_ids)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+
+
 
 
 
