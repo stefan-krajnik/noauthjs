@@ -6,21 +6,18 @@ const Bluebird = require('bluebird');
 const typeChecker = require('./../helpers/type.checker');
 const mongoose = require('mongoose');
 
-class AuthUser extends AuthAbstract{
+class AuthUser {
     constructor(user){
-        super();
-
         this._initUser(user);
     }
 
     initVars(){
-        super.initVars();
-
         this.dbConn = null;
         this.uuid = null;
         this.login = null;
         this.password = null;
         this.project = null;
+        this._projectMongoId = null;
         this.scopes = null;
     }
 
@@ -64,23 +61,124 @@ class AuthUser extends AuthAbstract{
     }
 
     deleteUser(){
-
+        let userModel = this.dbConn.model('oaUser');
+        return userModel.findOneAndRemove({uuid: this.uuid, project: this._projectMongoId}).then((removedUser)=>{
+            return !!removedUser;
+        });
     }
 
-    changeUserLogin(){
+    changeLogin(newLogin){
+        let userModel = this.dbConn.model('oaUser');
 
+        return userModel.findOneAndUpdate({uuid: this.uuid, project: this._projectMongoId}, {login: newLogin}, {new: true}).populate(['scopes', 'project']).then((userResult)=>{
+            if(userResult){
+                let tokenScopes = [];
+
+                for(let scope of userResult.scopes){
+                    tokenScopes.push(scope.scope_id);
+                }
+
+                userResult.scopes = tokenScopes;
+
+                this._initUser(userResult);
+                return this;
+            }
+
+            return null;
+        });
     }
 
-    changeUserPassword(){
+    changePassword(newPassword){
+        let pwdHash = AuthUser.createPasswordHash(this.login, newPassword);
+        let userModel = this.dbConn.model('oaUser');
 
+        return userModel.findOneAndUpdate({uuid: this.uuid, project: this._projectMongoId}, {password: pwdHash}, {new: true}).populate(['scopes', 'project']).then((userResult)=>{
+            if(userResult){
+                let tokenScopes = [];
+
+                for(let scope of userResult.scopes){
+                    tokenScopes.push(scope.scope_id);
+                }
+
+                userResult.scopes = tokenScopes;
+
+                this._initUser(userResult);
+
+                return this;
+            }
+
+            return null;
+        });
     }
 
-    addUserScopes(){
+    addScopes(scope_ids){
+        if(!typeChecker.isArray(scope_ids)){
+            scope_ids = [scope_ids];
+        }
 
+        let userModel = this.dbConn.model('oaUser');
+        let scopeModel = this.dbConn.model('oaScope');
+
+        return scopeModel.find({scope_id: {$in: scope_ids}}, '_id').then((scopeIdsResult)=>{
+            let scopeIds = [];
+
+            for(let scopeResult of scopeIdsResult){
+                scopeIds.push(scopeResult.id);
+            }
+
+            return userModel.findOneAndUpdate({uuid: this.uuid, project: this._projectMongoId}, {$addToSet: {scopes: { $each: scopeIds }}}, {new: true}).populate(['scopes', 'project']).then((userResult)=>{
+                if(userResult){
+                    let tokenScopes = [];
+
+                    for(let scope of userResult.scopes){
+                        tokenScopes.push(scope.scope_id);
+                    }
+
+                    userResult.scopes = tokenScopes;
+
+                    this._initUser(userResult);
+                    return this;
+                }
+
+                return null;
+            });
+
+        });
     }
 
-    removeUserScopes(){
+    removeScopes(scope_ids){
+        if(!typeChecker.isArray(scope_ids)){
+            scope_ids = [scope_ids];
+        }
 
+        let userModel = this.dbConn.model('oaUser');
+        let scopeModel = this.dbConn.model('oaScope');
+
+        return scopeModel.find({scope_id: {$in: scope_ids}}, '_id').then((scopeIdsResult)=>{
+            let scopeIds = [];
+
+            for(let scopeResult of scopeIdsResult){
+                scopeIds.push(scopeResult.id);
+            }
+
+            return userModel.findOneAndUpdate({uuid: this.uuid, project: this._projectMongoId}, {$pull: {scopes: { $in: scopeIds }}}, {new: true}).populate(['scopes', 'project']).then((userResult)=>{
+                if(userResult){
+                    let tokenScopes = [];
+
+                    for(let scope of userResult.scopes){
+                        tokenScopes.push(scope.scope_id);
+                    }
+
+                    userResult.scopes = tokenScopes;
+
+                    this._initUser(userResult);
+                    return this;
+                }
+
+                return null;
+            });
+
+        });
     }
 
     _getLastUuid(){
@@ -104,7 +202,7 @@ class AuthUser extends AuthAbstract{
         });
     }
 
-    _getScopeIds(scopes){
+    _getScopeIds(scopes = []){
         let newScopes = [];
         for(let scope of scopes){
             if(typeChecker.isString(scope)){
@@ -122,6 +220,7 @@ class AuthUser extends AuthAbstract{
             return project;
         }
         else if(project instanceof mongoose.Model){
+            this._projectMongoId = project.id;
             return project.project_id;
         }
 
