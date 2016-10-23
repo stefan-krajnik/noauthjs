@@ -23,7 +23,7 @@ See the example [application file](https://github.com/stefan-krajnik/noauthjs/bl
 
 ### const authServer = require('noauthjs');
 authServer is a singleton so don't try to create a new instance of it.  
-If you need to require it multiple files, just do so. Since it is a singleton you will always get the same object (instance).
+If you need to require it in multiple files, just do so. Since it is a singleton you will always get the same object (instance).
 
 
 ####Example
@@ -56,7 +56,7 @@ authServer.initServer(serverConfig).then((result)=>{
 
 ### \*_m_\* initServer(config)
 Initilizes the oauth server.  
-Creates or updates (if already exist in mongodb) projects, clients, scopes definded in config file.  
+Creates or updates (if already exists in mongodb) projects, clients, scopes definded in config file.  
 Creates a connection to mongodb using mongoose.  
 **Returns a promise (_bluebird_)**  
 
@@ -73,16 +73,18 @@ accessTokenHandler is a _getter_ which returns a _callback_ function for **_expr
 ```javascript
 {
 	url: "http://your.domain/access-token" // or any other address you specify in the router
-	method: "POST",
+	method: "POST", // DELETE to revoke a token
 	headers: {
     "Content-Type": "application/json"
 		"Authorization": "Basic btoa('client_id:client_secret')" // btoa is javascript function encodes a string to base64, btoa is just an example, use wahatever you want, just provide valid base64
 	},
 	body: {
-		"grant_type": "client_credentials", // client_credentials | user_credentials | refresh_token
+		"grant_type": "client_credentials", // client_credentials | user_credentials | facebook_token | google_token | refresh_token
 		"login": "someLogin", // only if grant_type == user_credentials
 		"password": "somePassword", // only if grant_type == user_credentials
-		"refresh_token": "someRefreshToken" // only if grant_type == refresh_token
+		"refresh_token": "someRefreshToken", // only if grant_type == refresh_token
+		"access_token": "someFacebookAccessToken", // only if grant_type == facebook_token 
+		"id_token": "someGoogleIdToken", // only if grant_type == google_token 
 	}
 
 }
@@ -111,7 +113,7 @@ If you get any other error one of us messed something up
 ```javascript
 {
 	url: "http://your.domain/access-token" // or any other address you specify in the router
-	method: "POST",
+	method: "DELETE",
 	headers: {
     "Content-Type": "application/json"
 		"Authorization": "Bearer someAccessTokenYouWantToRevoke"
@@ -203,11 +205,12 @@ response with status code **401** is returned
 ### \*_m_\* createUser(userConfig)
 Creates (registers) a user with login information and scopes provided in **_userConfig_**
 #### userConfig example
+#### userConfig example
 ```javascript
 {
   login: 'stevik', 
   password: 'heslo',
-  scopes: ['loggedin', 'anotherScope']
+  scopes: ['loggedin', 'anotherScope'] // provide scopes only if you want to override project's default_registration_scopes
 }
 ```
 
@@ -234,6 +237,16 @@ Creates (registers) a user with login information and scopes provided in **_user
 ### \*_m_\* deleteUserByUuid(uuid)
 **Returns a promise which resolves with a _bool_ values, _true_ if successfuly deleted, _false_ if user you tried to delete was not found in database**
 
+### \*_m_\* updateUserPasswordLogin(uuid, newLogin, newPassword)
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user 
+
+### \*_m_\* updateUserSocailFacebook(uuid, facebook_access_token)
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `facebook_access_token` is incorrect or the facebook user is already registered with another account
+
+### \*_m_\* updateUserSocailGoogle(uuid, google_id_token)
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `google_id_token` is incorrect or the google user is already registered with another account
+
+
 ## AuthUser public methods and variable
 
 ### \*_v_\* uuid
@@ -241,18 +254,29 @@ Creates (registers) a user with login information and scopes provided in **_user
 ### \*_v_\* password
 ### \*_v_\* project
 ### \*_v_\* scopes
+### \*_v_\* scopeObjectIds
+### \*_v_\* projectObjectId
 
 ### \*_m_\* changeLogin(newLogin)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
 
-### \*_m_\* changeUserPassword(uuid, newPassword)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+### \*_m_\* changePassword(newPassword)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
 
-### \*_m_\* addUserScopes(uuid, scope_ids)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+### \*_m_\* addScopes(scope_ids)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
 
-### \*_m_\* removeUserScopes(uuid, scope_ids)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change a user with uuid that doesn't exist
+### \*_m_\* removeScopes(scope_ids)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
+
+### \*_m_\* updatePasswordLogin(newLogin, newPassword)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
+
+### \*_m_\* updateSocialFacebook(facebook_access_token)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `facebook_access_token` is incorrect or the facebook user is already registered with another account
+
+### \*_m_\* updateSocialGoogle(google_id_token)
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `google_id_token` is incorrect or the google user is already registered with another account
 
 
 
@@ -282,6 +306,8 @@ Grant types lets you specify different authentication methods.
 **Currently supported grantypes are:**
 - client_credentials _(uses client_id and client_secret for the authentication)_
 - user_credentials _(uses login and password for the authentication)_
+- facebook_token _(uses facebook access_token for the authentication (and registration))_
+- google_token _(uses google id_token for the authentication (and registration))_
 - refresh_token _(uses refresh_token for genereting new access_token and refresh_token)_
 
 ## Tokens

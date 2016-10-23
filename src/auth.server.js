@@ -37,7 +37,7 @@ class AuthServer extends AuthTokenHandler {
     }
 
     getProject(project_id){
-        for(let project in this.projects){
+        for(let project of this.projects){
             if(project.project_id === project_id){
                 return project;
             }

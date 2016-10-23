@@ -3,7 +3,6 @@
 const AuthAbstract = require('./../auth.abstract.js');
 const AuthUser = require('./../auth.user/auth.user');
 const crypto = require('./../helpers/crypto');
-const typeChecker = require('./../helpers/type.checker');
 
 class AuthUserControllerAbstract extends AuthAbstract{
     constructor(){
@@ -21,7 +20,8 @@ class AuthUserControllerAbstract extends AuthAbstract{
         return this.projectDbQuery.then(()=>{
 
             let scopeModel = this.dbConn.model('oaScope');
-            return scopeModel.find({scope_id: {$in: userConfig.scope_ids}}, '_id').then((scopeIdsResult)=>{
+            let findScopes = userConfig.scope_ids || this.project.default_registration_scopes;
+            return scopeModel.find({scope_id: {$in: findScopes}}, '_id').then((scopeIdsResult)=>{
                 let scopeIds = [];
 
                 for(let scopeResult of scopeIdsResult){
@@ -32,6 +32,7 @@ class AuthUserControllerAbstract extends AuthAbstract{
                 userConfig.project = this.project.id;
                 userConfig.password = userConfig.password ? crypto.createSHA512(userConfig.password, (userConfig.login || null)) : null;
                 userConfig.scopes = scopeIds;
+                userConfig.social = userConfig.social;
 
                 let user = new AuthUser(userConfig);
                 user.dbConn = this.dbConn;
@@ -134,6 +135,30 @@ class AuthUserControllerAbstract extends AuthAbstract{
             return userModel.findOneAndRemove({uuid: uuid, project: this.project.id}).then((removedUser)=>{
                 return !!removedUser;
             });
+        });
+    }
+
+    updateUserSocailFacebook(uuid, facebook_access_token){
+        return this.projectDbQuery.then(()=>{
+            let user = new AuthUser({uuid: uuid, project: this.project});
+            user.dbConn = this.dbConn;
+            return user.updateSocialFacebook(facebook_access_token);
+        });
+    }
+
+    updateUserSocailGoogle(uuid, google_id_token){
+        return this.projectDbQuery.then(()=>{
+            let user = new AuthUser({uuid: uuid, project: this.project});
+            user.dbConn = this.dbConn;
+            return user.updateSocialGoogle(google_id_token);
+        });
+    }
+
+    updateUserPasswordLogin(uuid, newLogin, newPassword){
+        return this.projectDbQuery.then(()=>{
+            let user = new AuthUser({uuid: uuid, project: this.project});
+            user.dbConn = this.dbConn;
+            return user.updatePasswordLogin(newLogin, newPassword);
         });
     }
 

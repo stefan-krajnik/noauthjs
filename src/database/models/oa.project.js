@@ -15,6 +15,10 @@ let oaProject = new mongoose.Schema({
     project_description: {
         type: String,
         default: null
+    },
+    default_registration_scopes: {
+        type: [String],
+        default: null
     }
 });
 

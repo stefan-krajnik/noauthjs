@@ -28,7 +28,12 @@ let oaSession = new mongoose.Schema({
     scopes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'oaScope'
-    }]
+    }],
+    issuedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'oaClient',
+        required: true
+    }
 });
 
 

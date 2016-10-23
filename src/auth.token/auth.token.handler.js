@@ -7,6 +7,7 @@ const helperMethods = require('./../helpers/helper.methods');
 const AuthError = require('./../auth.error.js');
 const AuthSession = require('./auth.session');
 const AuthUser = require('./../auth.user/auth.user');
+const request = require('request-promise');
 
 class AuthTokenHandler extends AuthAbstract {
     constructor(){
@@ -27,7 +28,7 @@ class AuthTokenHandler extends AuthAbstract {
 
     get tokenInfo(){
         return (req, res)=>{
-            this.getTokenInfo(req, res);
+            this._tokenInfoHandler(req, res);
         };
     }
 
@@ -118,6 +119,26 @@ class AuthTokenHandler extends AuthAbstract {
                         res.status(error.getStatusCode()).json(error.getJsonObject());
                     });
                 }
+                else if(data.grant_type.toLowerCase() === 'facebook_token'){
+                    this._getSocailTokenFacebook(req).then((tokenObject) => {
+                        res.json(tokenObject);
+                    }).catch((error) => {
+                        if(!(error instanceof AuthError)){
+                            error = AuthError.internalServerError()
+                        }
+                        res.status(error.getStatusCode()).json(error.getJsonObject());
+                    });
+                }
+                else if(data.grant_type.toLowerCase() === 'google_token'){
+                    this._getSocailTokenGoogle(req).then((tokenObject) => {
+                        res.json(tokenObject);
+                    }).catch((error) => {
+                        if(!(error instanceof AuthError)){
+                            error = AuthError.internalServerError()
+                        }
+                        res.status(error.getStatusCode()).json(error.getJsonObject());
+                    });
+                }
                 else if(data.grant_type.toLowerCase() === 'refresh_token'){
                     this._getRefreshedToken(req).then((tokenObject)=>{
                         res.json(tokenObject);
@@ -159,6 +180,7 @@ class AuthTokenHandler extends AuthAbstract {
         };
 
         let requestHeaders = req && typeChecker.isOfTypeObject(req) ? req.headers : null;
+        requestHeaders.authorization = requestHeaders.authorization || requestHeaders["Authorization"];
         let authorization = (requestHeaders && requestHeaders.authorization && typeChecker.isString(requestHeaders.authorization)) ? requestHeaders.authorization : null;
         let authParts = authorization && authorization.toLowerCase().indexOf(' ') ? authorization.split(' ') : null;
         let authType = (authParts && authParts[0] && typeChecker.isString(authParts[0]) && authParts[0].toLowerCase()) || null;
@@ -174,7 +196,6 @@ class AuthTokenHandler extends AuthAbstract {
 
             headers.authorization.basic.client_id = clientId;
             headers.authorization.basic.client_secret = clientSecret;
-
         }
         else if(authType === 'bearer') {
             let bearerToken = authToken || null;
@@ -189,35 +210,20 @@ class AuthTokenHandler extends AuthAbstract {
         let clientId = this._getParsedRequestHeaders(req).authorization.basic.client_id;
         let clientSecret = this._getParsedRequestHeaders(req).authorization.basic.client_secret;
 
-        return clientModel.findOne({client_id: clientId, client_secret: clientSecret})
+        return clientModel.findOne({client_id: clientId, client_secret: clientSecret}).populate(['project']);
     }
 
     _getClientCredentialsTokenData(req){
-        let sessionModel = this.dbConn.model('oaSession');
-
         return this._getClientFromRequest(req).then((client)=>{
             if(!client) {
                 throw new AuthError(401, 'Unauhtorized', 'Invalid client credentials');
             }
 
-            let session = new sessionModel({
-                // uuid: null,
-                access_token: crypto.generateToken(),
-                refresh_token: crypto.generateToken(),
-                // at_expiration_time: null,
-                // rt_expiration_time: null,
-                scopes: client.scopes.client_credentials
-            });
-
-            return session.save().then((session)=>{
-                let authSession = new AuthSession(session);
-                return authSession.getBasicSessionDataForResponse();
-            });
+            return this._saveSession(null, client);
         });
     }
 
     _getUserCredentialsToken(req){
-        let sessionModel = this.dbConn.model('oaSession');
         let userModel = this.dbConn.model('oaUser');
 
         return this._getClientFromRequest(req).then((client)=>{
@@ -230,25 +236,180 @@ class AuthTokenHandler extends AuthAbstract {
             let unhashedPassword = (req && req.body && req.body.password) || null;
             let password = AuthUser.createPasswordHash(login, unhashedPassword);
 
+            if(!login || !password) {
+                throw new AuthError(401, 'Unauhtorized', 'Invalid user credentials');
+            }
+
             return userModel.findOne({login: login, password: password, project_id: projectId}).then((user)=>{
                 if(!user) {
                     throw new AuthError(401, 'Unauhtorized', 'Invalid user credentials');
                 }
 
-                let session = new sessionModel({
-                    uuid: user.uuid,
-                    access_token: crypto.generateToken(),
-                    refresh_token: crypto.generateToken(),
-                    // at_expiration_time: null,
-                    // rt_expiration_time: null,
-                    scopes: helperMethods.arrayMergeUnique(client.scopes.client_credentials, user.scopes)
+                return this._saveSession(user, client);
+            });
+        });
+    }
+
+    _getSocailTokenFacebook(req){
+        let userModel = this.dbConn.model('oaUser');
+
+        return this._getClientFromRequest(req).then((client)=>{
+            if(!client) {
+                throw new AuthError(401, 'Unauhtorized', 'Invalid client credentials');
+            }
+
+            let requestOptions = {
+                uri: 'https://graph.facebook.com/me',
+                qs: {
+                    access_token: req && req.body && req.body.access_token || null,
+                    fields: 'first_name,last_name,email,picture.width(9999),about,birthday,gender,languages,locale,link,middle_name,name,relationship_status,timezone,updated_time,work,website'
+                },
+                json: true
+            };
+
+            return request(requestOptions)
+                .then((facebookResponse) => {
+                    let createPromise = null;
+                    return userModel.findOne({'social.facebook.id': facebookResponse && facebookResponse.id || null}).then((user)=> {
+                        if (!user) {
+                            let projectId = client.project.project_id;
+
+                            createPromise = this.getProject(projectId).ready().then((project)=>{
+                                return project.createUser({
+                                    scopes: project.default_registration_scopes,
+                                    social: {
+                                        facebook: facebookResponse
+                                    }
+                                });
+                            });
+                        }
+
+                        if(createPromise){
+                            return createPromise.then((newUser) => {
+                                newUser.scopes = newUser.scopeObjectIds;
+                                return this._saveSession(newUser, client);
+                            });
+                        }
+
+                        return this._saveSession(user, client);
+
+                    });
+                }).catch((error) => {
+                    if(error && error.message && error.message.indexOf('400') > -1){
+                        throw new AuthError(400, 'Bad request', 'Invalid access_token');
+                    }
+
+                    throw error;
                 });
 
-                return session.save().then((session)=>{
-                    let authSession = new AuthSession(session);
-                    return authSession.getBasicSessionDataForResponse();
+
+        });
+    }
+
+    _getSocailTokenGoogle(req){
+        let userModel = this.dbConn.model('oaUser');
+
+        return this._getClientFromRequest(req).then((client)=>{
+            if(!client) {
+                throw new AuthError(401, 'Unauhtorized', 'Invalid client credentials');
+            }
+
+            let requestOptions = {
+                uri: 'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=',
+                qs: {
+                    id_token: req && req.body && req.body.id_token || null
+                },
+                json: true
+            };
+
+            return request(requestOptions)
+                .then((googleResponse) => {
+                    let createPromise = null;
+                    return userModel.findOne({'social.google.sub': googleResponse && googleResponse.sub || null}).then((user)=> {
+                        if (!user) {
+                            let projectId = client.project.project_id;
+
+                            createPromise = this.getProject(projectId).ready().then((project)=>{
+                                return project.createUser({
+                                    scopes: project.default_registration_scopes,
+                                    social: {
+                                        google: googleResponse
+                                    }
+                                });
+                            });
+                        }
+
+                        if(createPromise){
+                            return createPromise.then((newUser) => {
+                                newUser.scopes = newUser.scopeObjectIds;
+                                return this._saveSession(newUser, client);
+                            });
+                        }
+
+                        return this._saveSession(user, client);
+
+                    });
+                }).catch((error) => {
+                    if(error && error.message && error.message.indexOf('400') > -1){
+                        throw new AuthError(400, 'Bad request', 'Invalid id_token');
+                    }
+
+                    throw error;
                 });
-            });
+
+
+        });
+    }
+
+    getProject(projectId){}
+
+
+    _saveSession(user, client){
+        let sessionModel = this.dbConn.model('oaSession');
+        let sessionScopes = null;
+        let issuedBy = null;
+
+        if(user && client){
+            sessionScopes = [];
+            issuedBy = client.id;
+            for(let userScope of user.scopes){
+                for(let clientScope of client.scopes.user_credentials){
+                    let sessionScopesIds = [];
+
+                    for(let sessionScope of sessionScopes){
+                        sessionScopesIds.push(sessionScope.toString());
+                    }
+
+                    if(userScope.toString() === clientScope.toString() && sessionScopesIds.indexOf(userScope.toString()) === -1){
+                        sessionScopes.push(userScope);
+                    }
+                }
+            }
+
+            sessionScopes = helperMethods.arrayMergeUnique(client.scopes.client_credentials, sessionScopes);
+        }
+        else if(user && !client){
+            sessionScopes = user.scopes;
+            issuedBy = user.issuedBy;
+        }
+        else if(!user && client){
+            issuedBy = client.id;
+            sessionScopes = client.scopes.client_credentials;
+        }
+
+        let session = new sessionModel({
+            uuid: user && user.uuid || null,
+            access_token: crypto.generateToken(),
+            refresh_token: crypto.generateToken(),
+            // at_expiration_time: null,
+            // rt_expiration_time: null,
+            scopes: sessionScopes,
+            issuedBy: issuedBy
+        });
+
+        return session.save().then((session)=>{
+            let authSession = new AuthSession(session);
+            return authSession.getBasicSessionDataForResponse();
         });
     }
 
@@ -274,19 +435,7 @@ class AuthTokenHandler extends AuthAbstract {
                 throw new AuthError(401, 'Unauhtorized', 'Invalid tokens');
             }
 
-            let newSession = new sessionModel({
-                uuid: session.uuid,
-                access_token: crypto.generateToken(),
-                refresh_token: crypto.generateToken(),
-                // at_expiration_time: null,
-                // rt_expiration_time: null,
-                scopes: session.scopes
-            });
-
-            return newSession.save().then((savedSession)=>{
-                let authSession = new AuthSession(savedSession);
-                return authSession.getBasicSessionDataForResponse();
-            });
+            return this._saveSession(session);
         });
 
     }
@@ -300,23 +449,8 @@ class AuthTokenHandler extends AuthAbstract {
         return sessionModel.remove({access_token: accessToken});
     }
 
-
-    getTokenInfo(req, res){
-        this._getTokenInfo(req, res).then((tokenObject)=>{
-            res.json(tokenObject);
-        }).catch((error)=>{
-            if(!(error instanceof AuthError)){
-                error = AuthError.internalServerError()
-            }
-            res.status(error.getStatusCode()).json(error.getJsonObject());
-        });
-    }
-
-    _getTokenInfo(req, res){
+    getTokenInfo(accessToken){
         let sessionModel = this.dbConn.model('oaSession');
-
-        let reqHeaders = this._getParsedRequestHeaders(req);
-        let accessToken = reqHeaders.authorization.bearer;
 
         return sessionModel.findOne({access_token: accessToken, at_expiration_time: {$gt: new Date()}}).then((session)=>{
             if(!session){
@@ -327,6 +461,24 @@ class AuthTokenHandler extends AuthAbstract {
             return authSession.getFullSessionDataForResponse();
 
         });
+    }
+
+    _tokenInfoHandler(req, res){
+        this._getTokenInfo(req).then((tokenObject)=>{
+            res.json(tokenObject);
+        }).catch((error)=>{
+            if(!(error instanceof AuthError)){
+                error = AuthError.internalServerError()
+            }
+            res.status(error.getStatusCode()).json(error.getJsonObject());
+        });
+    }
+
+    _getTokenInfo(req){
+        let reqHeaders = this._getParsedRequestHeaders(req);
+        let accessToken = reqHeaders.authorization.bearer;
+
+        return this.getTokenInfo(accessToken);
     }
 
 }

@@ -1,19 +1,38 @@
 {
   "name": "noauthjs",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha -- \"test/*.test.js\""
   },
   "author": {
     "name": "Stefan Krajnik",
     "email": "stefan@stefankrajnik.com",
     "url": "http://stefankrajnik.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stefan-krajnik/noauthjs"
+  },
+  "keywords": [
+    "nodejs",
+    "oauth",
+    "oauth2",
+    "authentication",
+    "login",
+    "accounts",
+    "promise"
+  ],
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.4.6",
-    "mongoose": "^4.6.0"
+    "mongoose": "^4.6.0",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
   }
 }
