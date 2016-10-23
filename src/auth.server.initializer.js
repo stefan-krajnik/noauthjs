@@ -60,11 +60,32 @@ class AuthServerInitializer extends AuthAbstract {
         }
 
         for(let project of projects){
+            if(project.default_registration_scopes && !typeChecker.isArray(project.default_registration_scopes)){
+                throw new Error('default_registration_scopes must by an array!');
+            }
+
             let newProject = {
                 project_id: project.project_id,
                 project_name: project.project_name,
-                project_description: project.project_description
+                project_description: project.project_description,
+                default_registration_scopes: project.default_registration_scopes || null,
+                social_login: project.social_login
             };
+
+            if(project.default_registration_scopes && project.default_registration_scopes.length){
+                newProject.default_registration_scopes = [];
+                for(let defaultScope of project.default_registration_scopes){
+                    if(typeChecker.isString(defaultScope)){
+                        newProject.default_registration_scopes.push(defaultScope.scope_id);
+                    }
+                    else if(typeChecker.isOfTypeObject(defaultScope) || typeChecker.isObject(defaultScope)){
+                        newProject.default_registration_scopes.push(defaultScope.scope_id);
+                    }
+                    else {
+                        throw new Error('A scope in default_registration_scopes array must be a string (scope_id) or an object which contains "scope_id"!');
+                    }
+                }
+            }
 
             this.projects.push(newProject);
         }
@@ -86,7 +107,6 @@ class AuthServerInitializer extends AuthAbstract {
 
             return Bluebird.all(promises);
         });
-        // return this._saveConfig();
 
     }
 
@@ -137,7 +157,6 @@ class AuthServerInitializer extends AuthAbstract {
                             userScopes.push(resultScope.id);
                         }
                     }
-
                 }
 
                 newClient.scopes = {
@@ -152,7 +171,7 @@ class AuthServerInitializer extends AuthAbstract {
             scopePromises.push(scopePromise);
         }
 
-        return Bluebird.all(scopePromises).then((result)=>{
+        return Bluebird.all(scopePromises).then(()=>{
             return this._saveClients();
         });
     }
@@ -263,14 +282,6 @@ class AuthServerInitializer extends AuthAbstract {
 
     getConnection(){
         return this.connection;
-    }
-
-    _saveConfig(){
-        return Bluebird.all([
-            this._saveProjects(),
-            this._saveClients(),
-            this._saveScopes()
-        ]);
     }
 
     _saveProjects(){

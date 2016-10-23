@@ -20,6 +20,14 @@ class TypeChecker {
     static isOfTypeObject(input){
         return (!!input) && (typeof input === 'object');
     }
+
+    static isModel(input){
+        return !!(input && input.constructor && input.constructor.name && input.constructor.name.toLowerCase() === 'model');
+    }
+
+    static isObjectID(input){
+        return !!(input && input.constructor && input.constructor.name && input.constructor.name.toLowerCase() === 'objectid');
+    }
 }
 
 module.exports = TypeChecker;

@@ -42,7 +42,8 @@ let myProject = {
 
 let serverCongfig = {
     projects: [myProject], // Required, [ProjectObject]
-    connectionSettings: 'mongodb://localhost/noauthjs' // Required, String
+    connectionSettings: 'mongodb://localhost/noauthjs-test', // Required, String,
+    scopes: {publicScope, loggedInScope, premiumScope}
 };
 
 module.exports = serverCongfig;

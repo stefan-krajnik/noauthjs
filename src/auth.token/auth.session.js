@@ -15,6 +15,7 @@ class AuthSession {
         this.refresh_token = null;
         this.at_expiration_time = null;
         this.rt_expiration_time = null;
+        this.issuedBy = null;
         this.scopes = null;
         this.scope_ids = null;
 
@@ -29,6 +30,7 @@ class AuthSession {
         this.refresh_token = oaSession.refresh_token;
         this.at_expiration_time = oaSession.at_expiration_time;
         this.rt_expiration_time = oaSession.rt_expiration_time;
+        this.issuedBy = oaSession.issuedBy;
 
         let oaSessionPopulate = oaSession.populate;
         let populate = Bluebird.promisify(oaSessionPopulate);

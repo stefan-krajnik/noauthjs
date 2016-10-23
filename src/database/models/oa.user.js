@@ -10,12 +10,12 @@ let oaUser = new mongoose.Schema({
     },
     login: {
         type: String,
-        unique: true,
-        required: true
+        default: null
+
     },
     password: {
         type: String,
-        required: true
+        default: null
     },
     project: {
         type: mongoose.Schema.Types.ObjectId,
@@ -25,7 +25,17 @@ let oaUser = new mongoose.Schema({
     scopes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'oaScope'
-    }]
+    }],
+    social: {
+        facebook: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        },
+        google: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
+        }
+    }
 });
 
 let model = mongoose.model('oaUser', oaUser);
