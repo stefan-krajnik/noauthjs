@@ -35,10 +35,11 @@ class AuthSession {
         let oaSessionPopulate = oaSession.populate;
         let populate = Bluebird.promisify(oaSessionPopulate);
 
-        let populatePromise = populate.call(oaSession, 'scopes');
+        let populatePromise = populate.call(oaSession, ['scopes', 'issuedBy']);
 
         return populatePromise.then((result)=>{
             this.scopes = result.scopes;
+            this.issuedBy = result.issuedBy;
             return this;
         });
     }
@@ -53,24 +54,26 @@ class AuthSession {
     }
 
     getFullSessionDataForResponse(){
-        let sessionProps = ['uuid', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scopes'];
+        let sessionProps = ['uuid', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scopes', 'issuedBy'];
         return this._getSessionForResponse(sessionProps);
     }
 
     _getSessionForResponse(props){
         return this.getSession().then((session)=>{
             let scopes = [];
-
+            let issuedBy = session.issuedBy && session.issuedBy.client_id || null
             for(let scope of session.scopes){
                 scopes.push(scope.scope_id);
             }
+
             let sessionObject = {
                 uuid: props.indexOf('uuid') > -1 ? session.uuid : undefined,
                 access_token: props.indexOf('access_token') > -1 ? session.access_token : undefined,
                 refresh_token: props.indexOf('refresh_token') > -1 ? session.refresh_token : undefined,
                 expires_in: props.indexOf('expires_in') > -1 ? this._expiresInSeconds(session.at_expiration_time) : undefined,
                 token_type: props.indexOf('token_type') > - 1 ? 'bearer' : undefined,
-                scopes: props.indexOf('scopes') > - 1 ? scopes : undefined
+                scopes: props.indexOf('scopes') > - 1 ? scopes : undefined,
+                issuedBy: props.indexOf('issuedBy') > - 1 ? issuedBy : undefined
             };
 
             return sessionObject;

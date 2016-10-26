@@ -12,8 +12,6 @@ const request = require('request-promise');
 class AuthTokenHandler extends AuthAbstract {
     constructor(){
         super();
-
-
     }
 
     initVars(){

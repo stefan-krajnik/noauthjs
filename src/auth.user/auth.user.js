@@ -75,7 +75,7 @@ class AuthUser {
                 });
             }
 
-            throw "Login already exists";
+            throw new AuthError(409, 'Login already exists');
         });
 
     }
@@ -217,7 +217,7 @@ class AuthUser {
 
                 return userModel.findOne({'social.facebook.id': facebookResponse.id}).then((userResult) => {
                     if(userResult){
-                        throw "Facebook account is already registered with different user";
+                        throw new AuthError(409, 'Facebook account is already registered with different user');
                     }
 
                     return this._updateUser({ 'social.facebook': facebookResponse });
@@ -228,7 +228,7 @@ class AuthUser {
                     throw new AuthError(400, 'Bad request', 'Invalid access_token');
                 }
 
-                throw error;
+                throw new AuthError(error.status || 500, error.message, error);
             });
     }
 
@@ -248,7 +248,7 @@ class AuthUser {
                 return userModel.findOne({'social.google.sub': googleResponse.sub}).then((userResult) => {
 
                     if(userResult){
-                        throw "Google account is already registered with different user";
+                        throw new AuthError(409, 'Google account is already registered with different user');
                     }
 
                     return this._updateUser({ 'social.google': googleResponse });
@@ -258,7 +258,7 @@ class AuthUser {
                     throw new AuthError(400, 'Bad request', 'Invalid id_token');
                 }
 
-                throw error;
+                throw new AuthError(error.status || 500, error.message, error);
             });
     }
 
