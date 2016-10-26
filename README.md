@@ -205,7 +205,6 @@ response with status code **401** is returned
 ### \*_m_\* createUser(userConfig)
 Creates (registers) a user with login information and scopes provided in **_userConfig_**
 #### userConfig example
-#### userConfig example
 ```javascript
 {
   login: 'stevik', 
@@ -214,7 +213,8 @@ Creates (registers) a user with login information and scopes provided in **_user
 }
 ```
 
-**Returns a promise which resolves with an instance of `AuthUser`** class
+**Returns a promise which resolves with an instance of `AuthUser`** class or gets rejected with an `AuthError`  
+If user already exists error has statusCode `409` 
 
 ### \*_m_\* getUserByUuid(uuid)
 **Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user
@@ -241,10 +241,10 @@ Creates (registers) a user with login information and scopes provided in **_user
 **Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user 
 
 ### \*_m_\* updateUserSocailFacebook(uuid, facebook_access_token)
-**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `facebook_access_token` is incorrect or the facebook user is already registered with another account
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `facebook_access_token` is incorrect (statusCode: 400) or the facebook user is already registered with another account (statusCode: 409)
 
 ### \*_m_\* updateUserSocailGoogle(uuid, google_id_token)
-**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `google_id_token` is incorrect or the google user is already registered with another account
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `google_id_token` is incorrect (statusCode: 400) or the google user is already registered with another account (statusCode: 409)
 
 
 ## AuthUser public methods and variable
@@ -273,10 +273,10 @@ Creates (registers) a user with login information and scopes provided in **_user
 **Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user
 
 ### \*_m_\* updateSocialFacebook(facebook_access_token)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `facebook_access_token` is incorrect or the facebook user is already registered with another account
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `facebook_access_token` is incorrect (statusCode: 400) or the facebook user is already registered with another account (statusCode: 409) 
 
 ### \*_m_\* updateSocialGoogle(google_id_token)
-**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `google_id_token` is incorrect or the google user is already registered with another account
+**Returns a promise which resolves with an already existing instance of `AuthUser` with updated data** class or **null** if you tried to change an unexisting user, promise can be rejected if provided `google_id_token` is incorrect (statusCode: 400) or the google user is already registered with another account (statusCode: 409)
 
 
 
