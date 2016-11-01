@@ -145,7 +145,8 @@ tokenInfo is a _getter_ which returns a _callback_ function for **_express_** ro
   "token_type": "bearer",
   "scopes": [
     "public"
-  ]
+  ],
+  "grant": "client_credentials"
 }
 ```
 ` "uuid": null, // null if access is granted by client_credentials, Number if access granted by user_credentials`
@@ -215,6 +216,9 @@ Creates (registers) a user with login information and scopes provided in **_user
 
 **Returns a promise which resolves with an instance of `AuthUser`** class or gets rejected with an `AuthError`  
 If user already exists error has statusCode `409` 
+
+### \*_m_\* getUserByLogin(login)
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user
 
 ### \*_m_\* getUserByUuid(uuid)
 **Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user

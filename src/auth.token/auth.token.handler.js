@@ -9,6 +9,12 @@ const AuthSession = require('./auth.session');
 const AuthUser = require('./../auth.user/auth.user');
 const request = require('request-promise');
 
+const clientCredentialsGrant = 'client_credentials';
+const userCredentialsGrant = 'user_credentials';
+const facebookTokenGrant = 'facebook_token';
+const googleTokenGrant = 'google_token';
+const refreshTokenGrant = 'refresh_token';
+
 class AuthTokenHandler extends AuthAbstract {
     constructor(){
         super();
@@ -97,7 +103,7 @@ class AuthTokenHandler extends AuthAbstract {
             let data = req.body;
 
             if(data.grant_type){
-                if(data.grant_type.toLowerCase() === 'client_credentials'){
+                if(data.grant_type.toLowerCase() === clientCredentialsGrant){
                     this._getClientCredentialsTokenData(req).then((tokenObject)=>{
                         res.json(tokenObject);
                     }).catch((error)=>{
@@ -107,7 +113,7 @@ class AuthTokenHandler extends AuthAbstract {
                         res.status(error.getStatusCode()).json(error.getJsonObject());
                     });
                 }
-                else if(data.grant_type.toLowerCase() === 'user_credentials'){
+                else if(data.grant_type.toLowerCase() === userCredentialsGrant){
                     this._getUserCredentialsToken(req).then((tokenObject)=>{
                         res.json(tokenObject);
                     }).catch((error)=>{
@@ -117,7 +123,7 @@ class AuthTokenHandler extends AuthAbstract {
                         res.status(error.getStatusCode()).json(error.getJsonObject());
                     });
                 }
-                else if(data.grant_type.toLowerCase() === 'facebook_token'){
+                else if(data.grant_type.toLowerCase() === facebookTokenGrant){
                     this._getSocailTokenFacebook(req).then((tokenObject) => {
                         res.json(tokenObject);
                     }).catch((error) => {
@@ -127,7 +133,7 @@ class AuthTokenHandler extends AuthAbstract {
                         res.status(error.getStatusCode()).json(error.getJsonObject());
                     });
                 }
-                else if(data.grant_type.toLowerCase() === 'google_token'){
+                else if(data.grant_type.toLowerCase() === googleTokenGrant){
                     this._getSocailTokenGoogle(req).then((tokenObject) => {
                         res.json(tokenObject);
                     }).catch((error) => {
@@ -137,7 +143,7 @@ class AuthTokenHandler extends AuthAbstract {
                         res.status(error.getStatusCode()).json(error.getJsonObject());
                     });
                 }
-                else if(data.grant_type.toLowerCase() === 'refresh_token'){
+                else if(data.grant_type.toLowerCase() === refreshTokenGrant){
                     this._getRefreshedToken(req).then((tokenObject)=>{
                         res.json(tokenObject);
                     }).catch((error)=>{
@@ -217,7 +223,7 @@ class AuthTokenHandler extends AuthAbstract {
                 throw new AuthError(401, 'Unauhtorized', 'Invalid client credentials');
             }
 
-            return this._saveSession(null, client);
+            return this._saveSession(null, client, clientCredentialsGrant);
         });
     }
 
@@ -243,7 +249,7 @@ class AuthTokenHandler extends AuthAbstract {
                     throw new AuthError(401, 'Unauhtorized', 'Invalid user credentials');
                 }
 
-                return this._saveSession(user, client);
+                return this._saveSession(user, client, userCredentialsGrant);
             });
         });
     }
@@ -285,11 +291,11 @@ class AuthTokenHandler extends AuthAbstract {
                         if(createPromise){
                             return createPromise.then((newUser) => {
                                 newUser.scopes = newUser.scopeObjectIds;
-                                return this._saveSession(newUser, client);
+                                return this._saveSession(newUser, client, facebookTokenGrant);
                             });
                         }
 
-                        return this._saveSession(user, client);
+                        return this._saveSession(user, client, facebookTokenGrant);
 
                     });
                 }).catch((error) => {
@@ -340,11 +346,11 @@ class AuthTokenHandler extends AuthAbstract {
                         if(createPromise){
                             return createPromise.then((newUser) => {
                                 newUser.scopes = newUser.scopeObjectIds;
-                                return this._saveSession(newUser, client);
+                                return this._saveSession(newUser, client, googleTokenGrant);
                             });
                         }
 
-                        return this._saveSession(user, client);
+                        return this._saveSession(user, client, googleTokenGrant);
 
                     });
                 }).catch((error) => {
@@ -362,7 +368,7 @@ class AuthTokenHandler extends AuthAbstract {
     getProject(projectId){}
 
 
-    _saveSession(user, client){
+    _saveSession(user, client, grant){
         let sessionModel = this.dbConn.model('oaSession');
         let sessionScopes = null;
         let issuedBy = null;
@@ -402,7 +408,8 @@ class AuthTokenHandler extends AuthAbstract {
             // at_expiration_time: null,
             // rt_expiration_time: null,
             scopes: sessionScopes,
-            issuedBy: issuedBy
+            issuedBy: issuedBy,
+            grant: grant
         });
 
         return session.save().then((session)=>{
@@ -433,7 +440,7 @@ class AuthTokenHandler extends AuthAbstract {
                 throw new AuthError(401, 'Unauhtorized', 'Invalid tokens');
             }
 
-            return this._saveSession(session);
+            return this._saveSession(session, null, session.grant);
         });
 
     }

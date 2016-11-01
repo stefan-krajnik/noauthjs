@@ -33,6 +33,10 @@ let oaSession = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'oaClient',
         required: true
+    },
+    grant: {
+        type: String,
+        required: true
     }
 });
 

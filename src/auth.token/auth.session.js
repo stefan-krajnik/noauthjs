@@ -49,12 +49,12 @@ class AuthSession {
     }
 
     getBasicSessionDataForResponse(){
-        let sessionProps = ['access_token', 'refresh_token', 'expires_in', 'token_type'];
+        let sessionProps = ['access_token', 'refresh_token', 'expires_in', 'token_type', 'grant'];
         return this._getSessionForResponse(sessionProps);
     }
 
     getFullSessionDataForResponse(){
-        let sessionProps = ['uuid', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scopes', 'issuedBy'];
+        let sessionProps = ['uuid', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'scopes', 'issuedBy', 'grant'];
         return this._getSessionForResponse(sessionProps);
     }
 
@@ -73,7 +73,8 @@ class AuthSession {
                 expires_in: props.indexOf('expires_in') > -1 ? this._expiresInSeconds(session.at_expiration_time) : undefined,
                 token_type: props.indexOf('token_type') > - 1 ? 'bearer' : undefined,
                 scopes: props.indexOf('scopes') > - 1 ? scopes : undefined,
-                issuedBy: props.indexOf('issuedBy') > - 1 ? issuedBy : undefined
+                issuedBy: props.indexOf('issuedBy') > - 1 ? issuedBy : undefined,
+                grant: props.indexOf('grant') > -1 ? session.grant : undefined
             };
 
             return sessionObject;
