@@ -242,7 +242,7 @@ If user already exists error has statusCode `409`
 **Returns a promise which resolves with a _bool_ values, _true_ if successfuly deleted, _false_ if user you tried to delete was not found in database**
 
 ### \*_m_\* updateUserPasswordLogin(uuid, newLogin, newPassword)
-**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user 
+**Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `newLogin` is already used by another account (statusCode: 409) 
 
 ### \*_m_\* updateUserSocailFacebook(uuid, facebook_access_token)
 **Returns a promise which resolves with an instance of `AuthUser`** class or **null** if there is no such user, promise can be rejected if provided `facebook_access_token` is incorrect (statusCode: 400) or the facebook user is already registered with another account (statusCode: 409)
