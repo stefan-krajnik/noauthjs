@@ -265,7 +265,14 @@ class AuthUser {
     updatePasswordLogin(newLogin, newPassword){
         let pwdHash = AuthUser.createPasswordHash(newLogin, newPassword);
 
-        return this._updateUser({login: newLogin, password: pwdHash});
+        return userModel.findOne({login: newLogin}).then((userResult) => {
+            if(userResult){
+                throw new AuthError(409, 'Login already exists');
+            }
+
+            return this._updateUser({login: newLogin, password: pwdHash});
+        });
+
     }
 
     _getLastUuid(){
