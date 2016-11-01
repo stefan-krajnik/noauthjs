@@ -43,6 +43,30 @@ class AuthUserControllerAbstract extends AuthAbstract{
 
     }
 
+    getUserByLogin(login){
+        return this.projectDbQuery.then(()=>{
+            let userModel = this.dbConn.model('oaUser');
+            return userModel.findOne({login: login, project: this.project.id}).populate(['scopes', 'project']).then((userResult)=>{
+                let user = null;
+
+                if(userResult){
+                    let tokenScopes = [];
+
+                    for(let scope of userResult.scopes){
+                        tokenScopes.push(scope.scope_id);
+                    }
+
+                    userResult.scopes = tokenScopes;
+
+                    user = new AuthUser(userResult);
+                    user.dbConn = this.dbConn;
+                }
+
+                return user;
+            });
+        });
+    }
+
     getUserByUuid(uuid){
         return this.projectDbQuery.then(()=>{
             let userModel = this.dbConn.model('oaUser');
