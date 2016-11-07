@@ -116,18 +116,18 @@ describe('AuthServer', function() {
         });
     });
 
-    it('project.updateUserSocailFacebook', () => {
+    it('project.updateUserSocialFacebook', () => {
         return project.getUserByUuid(1).then((usr)=>{
-            return project.updateUserSocailFacebook(1, facebookAccessToken).then((user)=>{
+            return project.updateUserSocialFacebook(1, facebookAccessToken).then((user)=>{
                 expect(user).to.exist;
                 expect(user.social.facebook).to.exist;
             });
         });
     });
 
-    it('project.updateUserSocailGoogle', () => {
+    it('project.updateUserSocialGoogle', () => {
         return project.getUserByUuid(1).then((usr)=>{
-            return project.updateUserSocailGoogle(1, googleIdToken).then((user)=>{
+            return project.updateUserSocialGoogle(1, googleIdToken).then((user)=>{
                 expect(user).to.exist;
                 expect(user.social.google).to.exist;
             });

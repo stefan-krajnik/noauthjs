@@ -67,6 +67,17 @@ class AuthUserControllerAbstract extends AuthAbstract{
         });
     }
 
+    getUserByAccessToken(accessToken){
+        return this.projectDbQuery.then(()=>{
+            let token = accessToken.indexOf(' ') > -1 ? accessToken.split(' ')[1] : accessToken;
+            let sessionModel = this.dbConn.model('oaSession');
+
+            return sessionModel.findOne({access_token: token}).then((session) => {
+                return this.getUserByUuid(session.uuid);
+            });
+        });
+    }
+
     getUserByUuid(uuid){
         return this.projectDbQuery.then(()=>{
             let userModel = this.dbConn.model('oaUser');
@@ -162,7 +173,7 @@ class AuthUserControllerAbstract extends AuthAbstract{
         });
     }
 
-    updateUserSocailFacebook(uuid, facebook_access_token){
+    updateUserSocialFacebook(uuid, facebook_access_token){
         return this.projectDbQuery.then(()=>{
             let user = new AuthUser({uuid: uuid, project: this.project});
             user.dbConn = this.dbConn;
@@ -170,7 +181,7 @@ class AuthUserControllerAbstract extends AuthAbstract{
         });
     }
 
-    updateUserSocailGoogle(uuid, google_id_token){
+    updateUserSocialGoogle(uuid, google_id_token){
         return this.projectDbQuery.then(()=>{
             let user = new AuthUser({uuid: uuid, project: this.project});
             user.dbConn = this.dbConn;
