@@ -156,9 +156,9 @@ class AuthTokenHandler extends AuthAbstract {
             }
 
         }
-        else if(req.method.toLocaleLowerCase() === 'get'){
-
-        }
+        // else if(req.method.toLocaleLowerCase() === 'get'){
+        //
+        // }
         else if(req.method.toLocaleLowerCase() === 'delete'){
             this._deleteSession(req).then(()=>{
                 res.json({});
@@ -168,6 +168,9 @@ class AuthTokenHandler extends AuthAbstract {
                 }
                 res.status(error.getStatusCode()).json(error.getJsonObject());
             });
+        }
+        else {
+            res.sendStatus(405);
         }
 
     }
@@ -423,10 +426,8 @@ class AuthTokenHandler extends AuthAbstract {
 
         let reqHeaders = this._getParsedRequestHeaders(req);
         let refreshToken = (req && req.body && req.body.refresh_token) || null;
-        let accessToken = reqHeaders.authorization.bearer;
 
         return sessionModel.findOneAndRemove({
-            access_token: accessToken,
             refresh_token: refreshToken,
             $or: [
                 {at_expiration_time: {$gt: new Date()}},
